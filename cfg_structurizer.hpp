@@ -88,6 +88,7 @@ private:
 	bool find_loops(unsigned pass);
 	bool rewrite_complex_loop_exits(CFGNode *node, CFGNode *merge, Vector<CFGNode *> &dominated_exits);
 	bool rewrite_transposed_loops();
+	static uint32_t earliest_dominance_frontier_post_visit_order(const CFGNode *node);
 
 	struct LoopAnalysis
 	{

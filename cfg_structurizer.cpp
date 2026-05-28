@@ -6896,6 +6896,14 @@ bool CFGStructurizer::rewrite_complex_loop_exits(CFGNode *node, CFGNode *merge, 
 	return false;
 }
 
+uint32_t CFGStructurizer::earliest_dominance_frontier_post_visit_order(const CFGNode *n)
+{
+	uint32_t earliest_df = 0;
+	for (auto *df : n->dominance_frontier)
+		earliest_df = std::max<uint32_t>(df->forward_post_visit_order, earliest_df);
+	return earliest_df;
+}
+
 bool CFGStructurizer::find_loops(unsigned pass)
 {
 	for (auto index = forward_post_visit_order.size(); index; index--)
@@ -7063,6 +7071,23 @@ bool CFGStructurizer::find_loops(unsigned pass)
 					// If continue block exits, and it still does not dominate, we should invent a ladder block
 					// so we get one, otherwise splitting merge scopes will break.
 					dominated_merge = create_ladder_block(node->pred_back_edge, node->pred_back_edge->succ.front(), ".merge");
+				}
+
+				if (!dominated_merge && node->pred_back_edge->succ.empty() && dominated_exit.size() > 1)
+				{
+					// We have a bunch of equally valid merge targets, but there is no obvious candidate.
+					// Try to pick the one with earliest dominance frontier, which is likely to mean the
+					// least breaking construct.
+					std::stable_sort(dominated_exit.begin(), dominated_exit.end(), [](const CFGNode *a, const CFGNode *b)
+					{
+						return earliest_dominance_frontier_post_visit_order(a) > earliest_dominance_frontier_post_visit_order(b);
+					});
+
+					if (earliest_dominance_frontier_post_visit_order(dominated_exit[0]) !=
+						earliest_dominance_frontier_post_visit_order(dominated_exit[1]))
+					{
+						dominated_merge = dominated_exit[0];
+					}
 				}
 
 				// Single-escape merge.
