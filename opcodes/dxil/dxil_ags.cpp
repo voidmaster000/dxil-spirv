@@ -53,7 +53,8 @@ static bool emit_magic_ags_atomic_u64(Converter::Impl &impl, spv::Id image_id,
 	if (meta.kind == DXIL::ResourceKind::RawBuffer)
 	{
 		// AGS header only supports BAB.
-		coords[0] = build_index_divider(impl, impl.ags.backdoor_instructions[0]->getOperand(5), 3, 1);
+		coords[0] = build_index_divider(impl, impl.ags.backdoor_instructions[0]->getOperand(5), 3, 1,
+			!impl.options.ssbo_wraps_32bit_before_robustness);
 		num_coords = 1;
 		num_coords_full = 1;
 	}

@@ -33,6 +33,11 @@ layout(set = 0, binding = 0, std430) restrict readonly buffer _28_31
     uint64_t _m0[];
 } _31[];
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     uvec2 _46 = _10._m0[subgroupBroadcastFirst(0u)] >> uvec2(3u);
@@ -95,13 +100,14 @@ void main()
     _16[0u]._m0[_246] = _109 & _89;
     _16[0u]._m0[_246 + 1u] = _110 & _90;
     _16[0u]._m0[_246 + 2u] = _111 & _91;
-    uint _253 = gl_GlobalInvocationID.x * 3u;
-    uint _258 = (_253 < _67.y) ? (_253 + _67.x) : 536870908u;
-    u64vec2 _265 = u64vec2(_31[3u]._m0[_258], _31[3u]._m0[_258 + 1u]);
-    uint _272 = (gl_GlobalInvocationID.x < _61.y) ? (gl_GlobalInvocationID.x + _61.x) : 536870908u;
-    _26[2u]._m0[_272] = _265.x;
-    _26[2u]._m0[_272 + 1u] = _265.y;
-    _26[2u]._m0[_272 + 2u] = _91;
+    uint _263 = ByteAddressMask(gl_GlobalInvocationID.x * 3u, 8u);
+    uint _269 = (_263 < _67.y) ? (_263 + _67.x) : 536870908u;
+    u64vec2 _276 = u64vec2(_31[3u]._m0[_269], _31[3u]._m0[_269 + 1u]);
+    uint _279 = ByteAddressMask(gl_GlobalInvocationID.x, 8u);
+    uint _284 = (_279 < _61.y) ? (_279 + _61.x) : 536870908u;
+    _26[2u]._m0[_284] = _276.x;
+    _26[2u]._m0[_284 + 1u] = _276.y;
+    _26[2u]._m0[_284 + 2u] = _91;
 }
 
 
@@ -110,7 +116,7 @@ void main()
 ; SPIR-V
 ; Version: 1.3
 ; Generator: Unknown(30017); 21022
-; Bound: 280
+; Bound: 292
 ; Schema: 0
 OpCapability Shader
 OpCapability Int64
@@ -126,6 +132,9 @@ OpName %13 "SSBO"
 OpName %18 "SSBO"
 OpName %23 "SSBO"
 OpName %28 "SSBO"
+OpName %257 "ByteAddressMask"
+OpName %255 "index"
+OpName %256 "stride"
 OpDecorate %7 ArrayStride 8
 OpMemberDecorate %8 0 Offset 0
 OpDecorate %8 Block
@@ -216,11 +225,14 @@ OpDecorate %34 BuiltIn GlobalInvocationId
 %222 = OpConstant %5 18
 %238 = OpConstant %5 7
 %240 = OpConstant %5 21
-%264 = OpTypeVector %11 2
+%254 = OpTypeFunction %5 %5 %5
+%260 = OpConstant %5 4294967295
+%264 = OpConstant %5 8
+%275 = OpTypeVector %11 2
 %3 = OpFunction %1 None %2
 %4 = OpLabel
-OpBranch %278
-%278 = OpLabel
+OpBranch %290
+%290 = OpLabel
 %36 = OpAccessChain %35 %34 %37
 %38 = OpLoad %5 %36
 %40 = OpAccessChain %39 %16 %37
@@ -438,32 +450,42 @@ OpStore %248 %235
 OpStore %250 %236
 %252 = OpIMul %5 %38 %117
 %253 = OpIMul %5 %38 %42
-%254 = OpCompositeExtract %5 %67 0
-%255 = OpCompositeExtract %5 %67 1
-%256 = OpIAdd %5 %253 %254
-%257 = OpULessThan %74 %253 %255
-%258 = OpSelect %5 %257 %256 %77
-%259 = OpAccessChain %78 %63 %37 %258
-%260 = OpLoad %11 %259
-%262 = OpIAdd %5 %258 %50
-%261 = OpAccessChain %78 %63 %37 %262
-%263 = OpLoad %11 %261
-%265 = OpCompositeConstruct %264 %260 %263
-%266 = OpCompositeExtract %11 %265 0
-%267 = OpCompositeExtract %11 %265 1
-%268 = OpCompositeExtract %5 %61 0
-%269 = OpCompositeExtract %5 %61 1
-%270 = OpIAdd %5 %38 %268
-%271 = OpULessThan %74 %38 %269
-%272 = OpSelect %5 %271 %270 %77
-%273 = OpAccessChain %78 %56 %37 %272
-OpStore %273 %266
-%275 = OpIAdd %5 %272 %50
-%274 = OpAccessChain %78 %56 %37 %275
-OpStore %274 %267
-%277 = OpIAdd %5 %272 %57
-%276 = OpAccessChain %78 %56 %37 %277
-OpStore %276 %91
+%263 = OpFunctionCall %5 %257 %253 %264
+%265 = OpCompositeExtract %5 %67 0
+%266 = OpCompositeExtract %5 %67 1
+%267 = OpIAdd %5 %263 %265
+%268 = OpULessThan %74 %263 %266
+%269 = OpSelect %5 %268 %267 %77
+%270 = OpAccessChain %78 %63 %37 %269
+%271 = OpLoad %11 %270
+%273 = OpIAdd %5 %269 %50
+%272 = OpAccessChain %78 %63 %37 %273
+%274 = OpLoad %11 %272
+%276 = OpCompositeConstruct %275 %271 %274
+%277 = OpCompositeExtract %11 %276 0
+%278 = OpCompositeExtract %11 %276 1
+%279 = OpFunctionCall %5 %257 %38 %264
+%280 = OpCompositeExtract %5 %61 0
+%281 = OpCompositeExtract %5 %61 1
+%282 = OpIAdd %5 %279 %280
+%283 = OpULessThan %74 %279 %281
+%284 = OpSelect %5 %283 %282 %77
+%285 = OpAccessChain %78 %56 %37 %284
+OpStore %285 %277
+%287 = OpIAdd %5 %284 %50
+%286 = OpAccessChain %78 %56 %37 %287
+OpStore %286 %278
+%289 = OpIAdd %5 %284 %57
+%288 = OpAccessChain %78 %56 %37 %289
+OpStore %288 %91
 OpReturn
+OpFunctionEnd
+%257 = OpFunction %5 None %254
+%255 = OpFunctionParameter %5
+%256 = OpFunctionParameter %5
+%258 = OpLabel
+%259 = OpUDiv %5 %260 %256
+%261 = OpBitwiseAnd %5 %255 %259
+OpReturnValue %261
 OpFunctionEnd
 #endif

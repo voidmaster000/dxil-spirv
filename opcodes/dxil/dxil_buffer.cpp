@@ -232,6 +232,11 @@ bool raw_access_byte_address_can_vectorize(Converter::Impl &impl, const llvm::Ty
 	if (impl.options.ssbo_alignment > 16 && vecsize == 3)
 		return false;
 
+	// If implementation doesn't do the wrapping implicitly we cannot do it ourselves
+	// since we cannot express it as a simple mask.
+	if (vecsize == 3 && !impl.options.ssbo_wraps_32bit_before_robustness)
+		return false;
+
 	// The rules for raw BAB vectorization are pretty simple.
 	// If the offset % element_size == 0, we can translate that load to a clean vectorized load-store.
 	// vec3 is the special case due to robustness, but robustness2 will generally have 16 byte alignment here,
@@ -399,7 +404,7 @@ static spv::Id build_structured_index(Converter::Impl &impl, const llvm::Value *
 		else
 			offsets_id[0] = impl.get_id_for_value(index);
 
-		offsets_id[1] = build_index_divider(impl, byte_offset, addr_shift_log2, 1);
+		offsets_id[1] = build_index_divider(impl, byte_offset, addr_shift_log2, 1, false);
 
 		return build_accumulate_offsets(impl, offsets_id, 2);
 	}
@@ -434,7 +439,15 @@ static BufferAccessInfo build_buffer_access(Converter::Impl &impl, const llvm::C
 	{
 		// For raw buffers, the index is in bytes.
 		raw_vecsize = raw_access_byte_address_vectorize(impl, data_type, instruction->getOperand(2 + operand_offset), access_mask);
-		index_id = build_index_divider(impl, instruction->getOperand(2 + operand_offset), addr_shift_log2, raw_vecsize_to_vecsize(raw_vecsize));
+
+		// If we emulate with texel buffers we will never observe the u32 wrapping, so insert that manually.
+		// We are not required to implement the wrapping per component as our test coverage demonstrates,
+		// so we can just do the wrap once here.
+		bool requires_explicit_wrap =
+			!impl.options.ssbo_wraps_32bit_before_robustness || meta.storage == spv::StorageClassUniformConstant;
+
+		index_id = build_index_divider(impl, instruction->getOperand(2 + operand_offset),
+		                               addr_shift_log2, raw_vecsize_to_vecsize(raw_vecsize), requires_explicit_wrap);
 	}
 	else if (meta.kind == DXIL::ResourceKind::StructuredBuffer)
 	{
@@ -775,7 +788,8 @@ static RawAccessChain emit_raw_access_chain(Converter::Impl &impl, const Convert
 			// can straddle a 16 byte boundary.
 			// If we care enough, we can split this load into two, and use per-element on both, but that's overkill.
 
-			spv::Id element_id = build_index_divider(impl, inst->getOperand(2), addr_shift_log2, raw.alignment);
+			spv::Id element_id = build_index_divider(impl, inst->getOperand(2), addr_shift_log2, raw.alignment,
+			                                         !impl.options.raw_access_chain_wraps_32bit_before_robustness);
 			op->add_id(builder.makeUintConstant(raw.alignment * scalar_size));
 			op->add_id(element_id);
 			op->add_id(builder.makeUintConstant(0));

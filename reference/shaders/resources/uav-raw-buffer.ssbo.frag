@@ -24,13 +24,21 @@ layout(set = 0, binding = 0, std140) uniform _26_28
 layout(location = 1) flat in uint INDEX;
 layout(location = 0) out uvec2 SV_Target;
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     uint _40 = uint(int(gl_FragCoord.x));
-    uvec4 _52 = floatBitsToUint(_28._m0[0u]);
-    uint _53 = _52.x;
-    SV_Target.x = (_16[_53]._m0[_40].x + _10._m0[_40].x) + _21[nonuniformEXT(INDEX)]._m0[_40].x;
-    SV_Target.y = (_16[_53]._m0[_40].y + _10._m0[_40].y) + _21[nonuniformEXT(INDEX)]._m0[_40].y;
+    uint _52 = ByteAddressMask(_40, 8u);
+    uvec4 _63 = floatBitsToUint(_28._m0[0u]);
+    uint _64 = _63.x;
+    uint _69 = ByteAddressMask(_40, 8u);
+    uint _80 = ByteAddressMask(_40, 8u);
+    SV_Target.x = (_16[_64]._m0[_69].x + _10._m0[_52].x) + _21[nonuniformEXT(INDEX)]._m0[_80].x;
+    SV_Target.y = (_16[_64]._m0[_69].y + _10._m0[_52].y) + _21[nonuniformEXT(INDEX)]._m0[_80].y;
 }
 
 
@@ -39,7 +47,7 @@ void main()
 ; SPIR-V
 ; Version: 1.3
 ; Generator: Unknown(30017); 21022
-; Bound: 79
+; Bound: 92
 ; Schema: 0
 OpCapability Shader
 OpCapability StorageBufferArrayDynamicIndexing
@@ -57,6 +65,9 @@ OpName %26 ""
 OpName %30 "SV_Position"
 OpName %32 "INDEX"
 OpName %34 "SV_Target"
+OpName %46 "ByteAddressMask"
+OpName %44 "index"
+OpName %45 "stride"
 OpDecorate %7 ArrayStride 8
 OpMemberDecorate %8 0 Offset 0
 OpDecorate %8 Block
@@ -85,8 +96,8 @@ OpDecorate %32 Flat
 OpDecorate %32 Location 1
 OpDecorate %34 Location 0
 OpDecorate %35 NonUniform
-OpDecorate %67 NonUniform
-OpDecorate %68 NonUniform
+OpDecorate %79 NonUniform
+OpDecorate %81 NonUniform
 %1 = OpTypeVoid
 %2 = OpTypeFunction %1
 %5 = OpTypeInt 32 0
@@ -122,51 +133,65 @@ OpDecorate %68 NonUniform
 %36 = OpTypePointer Input %23
 %38 = OpConstant %5 0
 %42 = OpConstant %5 3
-%43 = OpTypePointer StorageBuffer %6
-%48 = OpTypePointer Uniform %24
-%51 = OpTypeVector %5 4
-%55 = OpConstant %5 4
-%56 = OpTypePointer StorageBuffer %12
-%65 = OpConstant %5 100
-%66 = OpTypePointer StorageBuffer %18
-%74 = OpTypePointer Output %5
+%43 = OpTypeFunction %5 %5 %5
+%49 = OpConstant %5 4294967295
+%53 = OpConstant %5 8
+%54 = OpTypePointer StorageBuffer %6
+%59 = OpTypePointer Uniform %24
+%62 = OpTypeVector %5 4
+%66 = OpConstant %5 4
+%67 = OpTypePointer StorageBuffer %12
+%77 = OpConstant %5 100
+%78 = OpTypePointer StorageBuffer %18
+%87 = OpTypePointer Output %5
 %3 = OpFunction %1 None %2
 %4 = OpLabel
-OpBranch %77
-%77 = OpLabel
+OpBranch %90
+%90 = OpLabel
 %35 = OpLoad %5 %32
 %37 = OpAccessChain %36 %30 %38
 %39 = OpLoad %23 %37
 %40 = OpConvertFToS %5 %39
 %41 = OpShiftLeftLogical %5 %40 %42
-%44 = OpAccessChain %43 %10 %38 %40
-%45 = OpLoad %6 %44
-%46 = OpCompositeExtract %5 %45 0
-%47 = OpCompositeExtract %5 %45 1
-%49 = OpAccessChain %48 %28 %38 %38
-%50 = OpLoad %24 %49
-%52 = OpBitcast %51 %50
-%53 = OpCompositeExtract %5 %52 0
-%54 = OpIAdd %5 %53 %55
-%57 = OpAccessChain %56 %16 %53
-%58 = OpAccessChain %43 %57 %38 %40
-%59 = OpLoad %6 %58
-%60 = OpCompositeExtract %5 %59 0
-%61 = OpCompositeExtract %5 %59 1
-%62 = OpIAdd %5 %60 %46
-%63 = OpIAdd %5 %61 %47
-%64 = OpIAdd %5 %35 %65
-%67 = OpAccessChain %66 %21 %35
-%68 = OpAccessChain %43 %67 %38 %40
-%69 = OpLoad %6 %68
-%70 = OpCompositeExtract %5 %69 0
-%71 = OpCompositeExtract %5 %69 1
-%72 = OpIAdd %5 %62 %70
-%73 = OpIAdd %5 %63 %71
-%75 = OpAccessChain %74 %34 %38
-OpStore %75 %72
-%76 = OpAccessChain %74 %34 %22
-OpStore %76 %73
+%52 = OpFunctionCall %5 %46 %40 %53
+%55 = OpAccessChain %54 %10 %38 %52
+%56 = OpLoad %6 %55
+%57 = OpCompositeExtract %5 %56 0
+%58 = OpCompositeExtract %5 %56 1
+%60 = OpAccessChain %59 %28 %38 %38
+%61 = OpLoad %24 %60
+%63 = OpBitcast %62 %61
+%64 = OpCompositeExtract %5 %63 0
+%65 = OpIAdd %5 %64 %66
+%68 = OpAccessChain %67 %16 %64
+%69 = OpFunctionCall %5 %46 %40 %53
+%70 = OpAccessChain %54 %68 %38 %69
+%71 = OpLoad %6 %70
+%72 = OpCompositeExtract %5 %71 0
+%73 = OpCompositeExtract %5 %71 1
+%74 = OpIAdd %5 %72 %57
+%75 = OpIAdd %5 %73 %58
+%76 = OpIAdd %5 %35 %77
+%79 = OpAccessChain %78 %21 %35
+%80 = OpFunctionCall %5 %46 %40 %53
+%81 = OpAccessChain %54 %79 %38 %80
+%82 = OpLoad %6 %81
+%83 = OpCompositeExtract %5 %82 0
+%84 = OpCompositeExtract %5 %82 1
+%85 = OpIAdd %5 %74 %83
+%86 = OpIAdd %5 %75 %84
+%88 = OpAccessChain %87 %34 %38
+OpStore %88 %85
+%89 = OpAccessChain %87 %34 %22
+OpStore %89 %86
 OpReturn
+OpFunctionEnd
+%46 = OpFunction %5 None %43
+%44 = OpFunctionParameter %5
+%45 = OpFunctionParameter %5
+%47 = OpLabel
+%48 = OpUDiv %5 %49 %45
+%50 = OpBitwiseAnd %5 %44 %48
+OpReturnValue %50
 OpFunctionEnd
 #endif

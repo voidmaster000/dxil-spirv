@@ -198,6 +198,7 @@ static void print_help()
 	     "\t[--shader-quirk <index>]\n"
 	     "\t[--non-semantic]\n"
 	     "\t[--mixed-float-dot-product]\n"
+	     "\t[--assume-ssbo-32bit-wrapping]\n"
 	     "\t[--view-instancing]\n"
 	     "\t[--view-instancing-last-pre-rasterization-stage]\n"
 	     "\t[--view-instance-to-viewport-spec-id <id>]\n"
@@ -292,6 +293,8 @@ struct Arguments
 	bool view_instancing_last_pre_rasterization_stage = false;
 	uint32_t view_index_to_view_instance_spec_id = UINT32_MAX;
 	uint32_t view_instance_to_viewport_spec_id = UINT32_MAX;
+
+	bool ssbo_32bit_wrapping = false;
 };
 
 struct Remapper
@@ -927,6 +930,9 @@ int main(int argc, char **argv)
 	cbs.add("--view-index-to-view-instance-spec-id", [&](CLIParser &parser) {
 		args.view_index_to_view_instance_spec_id = parser.next_uint();
 	});
+	cbs.add("--assume-ssbo-32bit-wrapping", [&](CLIParser &parser) {
+		args.ssbo_32bit_wrapping = true;
+	});
 	cbs.error_handler = [] { print_help(); };
 	cbs.default_handler = [&](const char *arg) { args.input_path = arg; };
 	CLIParser cli_parser(std::move(cbs), argc - 1, argv + 1);
@@ -1317,6 +1323,13 @@ int main(int argc, char **argv)
 		inst.view_index_to_view_instance_spec_id = args.view_index_to_view_instance_spec_id;
 		inst.view_instance_to_viewport_spec_id = args.view_instance_to_viewport_spec_id;
 		dxil_spv_converter_add_option(converter, &inst.base);
+	}
+
+	if (args.ssbo_32bit_wrapping)
+	{
+		dxil_spv_option_ssbo_addressing_behavior behavior = {{ DXIL_SPV_OPTION_SSBO_ADDRESSING_BEHAVIOR },
+			DXIL_SPV_TRUE, DXIL_SPV_TRUE };
+		dxil_spv_converter_add_option(converter, &behavior.base);
 	}
 
 	for (auto &quirk : args.quirks)

@@ -22,6 +22,11 @@ layout(set = 1, binding = 2, r32i) uniform iimage2D _30;
 layout(location = 0) flat in uvec3 TEXCOORD;
 layout(location = 0) out uint SV_Target;
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     uint _64 = imageAtomicCompSwap(_8, int(TEXCOORD.x), 20u, 30u);
@@ -34,8 +39,8 @@ void main()
     int _92 = imageAtomicCompSwap(_27, int(TEXCOORD.x), int(20u), int(30u));
     int _99 = imageAtomicCompSwap(_30, ivec2(uvec2(TEXCOORD.x, TEXCOORD.y)), int(20u), int(30u));
     uint _109 = atomicCompSwap(_34._m0[(TEXCOORD.x * 4u) + 2u], 20u, 30u);
-    uint _113 = atomicCompSwap(_38._m0[TEXCOORD.x], 20u, 30u);
-    SV_Target = (((((((((_70 + _64) + _74) + _78) + _82) + _85) + _88) + uint(_92)) + uint(_99)) + _109) + _113;
+    uint _123 = atomicCompSwap(_38._m0[ByteAddressMask(TEXCOORD.x, 4u)], 20u, 30u);
+    SV_Target = (((((((((_70 + _64) + _74) + _78) + _82) + _85) + _88) + uint(_92)) + uint(_99)) + _109) + _123;
 }
 
 
@@ -44,7 +49,7 @@ void main()
 ; SPIR-V
 ; Version: 1.3
 ; Generator: Unknown(30017); 21022
-; Bound: 117
+; Bound: 127
 ; Schema: 0
 OpCapability Shader
 OpCapability Image1D
@@ -57,6 +62,9 @@ OpName %32 "SSBO"
 OpName %36 "SSBO"
 OpName %41 "TEXCOORD"
 OpName %43 "SV_Target"
+OpName %115 "ByteAddressMask"
+OpName %113 "index"
+OpName %114 "stride"
 OpDecorate %8 DescriptorSet 0
 OpDecorate %8 Binding 0
 OpDecorate %11 DescriptorSet 0
@@ -138,10 +146,12 @@ OpDecorate %43 Location 0
 %90 = OpTypePointer Image %24
 %105 = OpConstant %5 4
 %107 = OpTypePointer StorageBuffer %5
+%112 = OpTypeFunction %5 %5 %5
+%118 = OpConstant %5 4294967295
 %3 = OpFunction %1 None %2
 %4 = OpLabel
-OpBranch %115
-%115 = OpLabel
+OpBranch %125
+%125 = OpLabel
 %44 = OpLoad %28 %30
 %45 = OpLoad %25 %27
 %46 = OpLoad %21 %23
@@ -199,10 +209,19 @@ OpBranch %115
 %109 = OpAtomicCompareExchange %5 %108 %57 %54 %54 %66 %65
 %110 = OpIAdd %5 %103 %109
 %111 = OpShiftLeftLogical %5 %55 %60
-%112 = OpAccessChain %107 %38 %54 %55
-%113 = OpAtomicCompareExchange %5 %112 %57 %54 %54 %66 %65
-%114 = OpIAdd %5 %110 %113
-OpStore %43 %114
+%121 = OpFunctionCall %5 %115 %55 %105
+%122 = OpAccessChain %107 %38 %54 %121
+%123 = OpAtomicCompareExchange %5 %122 %57 %54 %54 %66 %65
+%124 = OpIAdd %5 %110 %123
+OpStore %43 %124
 OpReturn
+OpFunctionEnd
+%115 = OpFunction %5 None %112
+%113 = OpFunctionParameter %5
+%114 = OpFunctionParameter %5
+%116 = OpLabel
+%117 = OpUDiv %5 %118 %114
+%119 = OpBitwiseAnd %5 %113 %117
+OpReturnValue %119
 OpFunctionEnd
 #endif

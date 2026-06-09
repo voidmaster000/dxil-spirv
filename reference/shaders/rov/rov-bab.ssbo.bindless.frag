@@ -34,11 +34,17 @@ layout(push_constant, std430) uniform RootConstants
     uint _m7;
 } registers;
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     uint _36 = (uint(gl_FragCoord.y) * 1000u) + uint(gl_FragCoord.x);
+    uint _47 = ByteAddressMask(_36, 16u);
     SPIRV_Cross_beginInvocationInterlock();
-    _14[registers._m4]._m0[_36] = uvec4(_14[registers._m4]._m0[_36].x + 1u, _14[registers._m4]._m0[_36].y + 2u, _14[registers._m4]._m0[_36].z + 3u, _14[registers._m4]._m0[_36].w + 4u);
+    _14[registers._m4]._m0[ByteAddressMask(_36, 16u)] = uvec4(_14[registers._m4]._m0[_47].x + 1u, _14[registers._m4]._m0[_47].y + 2u, _14[registers._m4]._m0[_47].z + 3u, _14[registers._m4]._m0[_47].w + 4u);
     SPIRV_Cross_endInvocationInterlock();
 }
 
@@ -48,7 +54,7 @@ void main()
 ; SPIR-V
 ; Version: 1.3
 ; Generator: Unknown(30017); 21022
-; Bound: 55
+; Bound: 67
 ; Schema: 0
 OpCapability Shader
 OpCapability RuntimeDescriptorArray
@@ -67,6 +73,9 @@ OpName %6 "RootConstants"
 OpName %8 "registers"
 OpName %11 "SSBO"
 OpName %18 "SV_Position"
+OpName %41 "ByteAddressMask"
+OpName %39 "index"
+OpName %40 "stride"
 OpDecorate %6 Block
 OpMemberDecorate %6 0 Offset 0
 OpMemberDecorate %6 1 Offset 4
@@ -106,13 +115,16 @@ OpDecorate %18 BuiltIn FragCoord
 %27 = OpConstant %5 0
 %30 = OpConstant %5 1
 %35 = OpConstant %5 1000
-%38 = OpTypePointer StorageBuffer %9
-%47 = OpConstant %5 2
-%49 = OpConstant %5 3
+%38 = OpTypeFunction %5 %5 %5
+%44 = OpConstant %5 4294967295
+%48 = OpConstant %5 16
+%49 = OpTypePointer StorageBuffer %9
+%58 = OpConstant %5 2
+%60 = OpConstant %5 3
 %3 = OpFunction %1 None %2
 %4 = OpLabel
-OpBranch %53
-%53 = OpLabel
+OpBranch %65
+%65 = OpLabel
 %22 = OpAccessChain %21 %8 %23
 %24 = OpLoad %5 %22
 %20 = OpAccessChain %19 %14 %24
@@ -125,21 +137,31 @@ OpBranch %53
 %34 = OpIMul %5 %33 %35
 %36 = OpIAdd %5 %34 %32
 %37 = OpShiftLeftLogical %5 %36 %23
-%39 = OpAccessChain %38 %20 %27 %36
+%47 = OpFunctionCall %5 %41 %36 %48
+%50 = OpAccessChain %49 %20 %27 %47
 OpBeginInvocationInterlockEXT
-%40 = OpLoad %9 %39
-%41 = OpCompositeExtract %5 %40 0
-%42 = OpCompositeExtract %5 %40 1
-%43 = OpCompositeExtract %5 %40 2
-%44 = OpCompositeExtract %5 %40 3
-%45 = OpIAdd %5 %41 %30
-%46 = OpIAdd %5 %42 %47
-%48 = OpIAdd %5 %43 %49
-%50 = OpIAdd %5 %44 %23
-%51 = OpCompositeConstruct %9 %45 %46 %48 %50
-%52 = OpAccessChain %38 %20 %27 %36
-OpStore %52 %51
+%51 = OpLoad %9 %50
+%52 = OpCompositeExtract %5 %51 0
+%53 = OpCompositeExtract %5 %51 1
+%54 = OpCompositeExtract %5 %51 2
+%55 = OpCompositeExtract %5 %51 3
+%56 = OpIAdd %5 %52 %30
+%57 = OpIAdd %5 %53 %58
+%59 = OpIAdd %5 %54 %60
+%61 = OpIAdd %5 %55 %23
+%62 = OpFunctionCall %5 %41 %36 %48
+%63 = OpCompositeConstruct %9 %56 %57 %59 %61
+%64 = OpAccessChain %49 %20 %27 %62
+OpStore %64 %63
 OpEndInvocationInterlockEXT
 OpReturn
+OpFunctionEnd
+%41 = OpFunction %5 None %38
+%39 = OpFunctionParameter %5
+%40 = OpFunctionParameter %5
+%42 = OpLabel
+%43 = OpUDiv %5 %44 %40
+%45 = OpBitwiseAnd %5 %39 %43
+OpReturnValue %45
 OpFunctionEnd
 #endif

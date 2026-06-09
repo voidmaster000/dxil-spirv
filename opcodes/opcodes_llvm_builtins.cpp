@@ -1626,7 +1626,7 @@ bool emit_getelementptr_instruction(Converter::Impl &impl, const llvm::GetElemen
 
 		if (i == 2 && elementptr_shift != 0)
 		{
-			spv::Id index = build_index_divider(impl, instruction->getOperand(2), elementptr_shift, 1);
+			spv::Id index = build_index_divider(impl, instruction->getOperand(2), elementptr_shift, 1, false);
 			op->add_id(index);
 		}
 		else

@@ -2242,7 +2242,7 @@ static bool emit_cbuffer_load_physical_pointer(Converter::Impl &impl, const llvm
 	else
 	{
 		unsigned addr_shift_log2 = raw_buffer_data_type_to_addr_shift_log2(impl, instruction->getType());
-		index_id = build_index_divider(impl, instruction->getOperand(2), addr_shift_log2, 1);
+		index_id = build_index_divider(impl, instruction->getOperand(2), addr_shift_log2, 1, false);
 	}
 
 	auto *result_type = instruction->getType();
@@ -2790,7 +2790,7 @@ bool emit_cbuffer_load_instruction(Converter::Impl &impl, const llvm::CallInst *
 		unsigned raw_bits = raw_width_to_bits(raw_width);
 		ptr_id = get_buffer_alias_handle(impl, meta, ptr_id, raw_type, raw_width, RawVecSize::V1);
 
-		spv::Id array_index_id = build_index_divider(impl, instruction->getOperand(2), addr_shift, 1);
+		spv::Id array_index_id = build_index_divider(impl, instruction->getOperand(2), addr_shift, 1, false);
 
 		spv::Id element_type_id = raw_type == RawType::Integer ?
 		    builder.makeUintType(raw_bits) : builder.makeFloatType(raw_bits);

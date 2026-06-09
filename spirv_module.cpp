@@ -91,6 +91,7 @@ struct SPIRVModule::Impl : BlockEmissionInterface
 	spv::Id build_is_quad_uniform_control_flow(SPIRVModule &module);
 	spv::Id build_validate_bda_load_store(SPIRVModule &module);
 	spv::Id build_allocate_invocation_id(SPIRVModule &module);
+	spv::Id build_byte_address_mask_id(SPIRVModule &module);
 	spv::Function *discard_function = nullptr;
 	spv::Function *discard_function_cond = nullptr;
 	spv::Function *demote_function_cond = nullptr;
@@ -153,6 +154,7 @@ struct SPIRVModule::Impl : BlockEmissionInterface
 	spv::Id is_quad_uniform_call_id = 0;
 	spv::Id validate_bda_load_store_call_id = 0;
 	spv::Id allocate_invocation_id_call_id = 0;
+	spv::Id byte_address_mask_call_id = 0;
 
 	struct MultiPrefixOp
 	{
@@ -2178,6 +2180,37 @@ spv::Id SPIRVModule::Impl::build_robust_physical_cbv_load(SPIRVModule &module, s
 	return func->getId();
 }
 
+spv::Id SPIRVModule::Impl::build_byte_address_mask_id(SPIRVModule &module)
+{
+	if (byte_address_mask_call_id)
+		return byte_address_mask_call_id;
+
+	auto *current_build_point = builder.getBuildPoint();
+	spv::Block *entry = nullptr;
+	spv::Id uint_type = builder.makeUintType(32);
+
+	auto *func = builder.makeFunctionEntry(spv::NoPrecision, uint_type,
+	                                       "ByteAddressMask",
+	                                       {uint_type, uint_type}, {}, &entry);
+
+	builder.addName(func->getParamId(0), "index");
+	builder.addName(func->getParamId(1), "stride");
+
+	auto *div = builder.addInstruction(uint_type, spv::OpUDiv);
+	div->addIdOperand(builder.makeUintConstant(UINT32_MAX));
+	div->addIdOperand(func->getParamId(1));
+
+	auto *mask = builder.addInstruction(uint_type, spv::OpBitwiseAnd);
+	mask->addIdOperand(func->getParamId(0));
+	mask->addIdOperand(div->getResultId());
+
+	builder.makeReturn(false, mask->getResultId());
+	builder.setBuildPoint(current_build_point);
+
+	byte_address_mask_call_id = func->getId();
+	return func->getId();
+}
+
 spv::Id SPIRVModule::Impl::build_is_quad_uniform_control_flow(SPIRVModule &module)
 {
 	if (is_quad_uniform_call_id)
@@ -2938,6 +2971,8 @@ spv::Id SPIRVModule::Impl::get_helper_call_id(SPIRVModule &module, HelperCall ca
 		return build_coop_mat_saturation_fixup(module, type_id);
 	case HelperCall::CoopMatSaturateFP8:
 		return build_coop_mat_saturate_fp8(module, type_id);
+	case HelperCall::ByteAddressMask:
+		return build_byte_address_mask_id(module);
 
 	default:
 		break;

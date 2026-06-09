@@ -54,7 +54,7 @@ bool extract_raw_buffer_access_split(const llvm::Value *index, unsigned stride,
 									 RawBufferAccessSplit &split);
 
 spv::Id build_index_divider(Converter::Impl &impl, const llvm::Value *offset,
-                            unsigned addr_shift_log2, unsigned vecsize);
+                            unsigned addr_shift_log2, unsigned vecsize, bool byte_address_wrap);
 
 // Clip-cull distance munging.
 spv::Id get_clip_cull_distance_access_chain(

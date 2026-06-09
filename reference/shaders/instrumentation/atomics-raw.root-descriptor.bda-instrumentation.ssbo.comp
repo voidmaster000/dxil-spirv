@@ -176,21 +176,26 @@ void AssumeTrue(bool value, uint inst)
 {
     if ((!value) && ShouldReportInstrumentation)
     {
-        uint _472 = uint(InstrumentationControlData.atomics.length()) - 2u;
-        uint _474 = InstrumentationControlData.atomics[_472];
-        uint _480 = (((inst * 97u) ^ 43981u) ^ (_474 * 51329u)) & (uint(InstrumentationData.data.length()) - 1u);
-        uint _481 = _480 >> 4u;
-        uint _483 = 1u << (_480 & 15u);
-        uint _485 = atomicOr(InstrumentationControlData.atomics[_481], _483);
+        uint _482 = uint(InstrumentationControlData.atomics.length()) - 2u;
+        uint _484 = InstrumentationControlData.atomics[_482];
+        uint _490 = (((inst * 97u) ^ 43981u) ^ (_484 * 51329u)) & (uint(InstrumentationData.data.length()) - 1u);
+        uint _491 = _490 >> 4u;
+        uint _493 = 1u << (_490 & 15u);
+        uint _495 = atomicOr(InstrumentationControlData.atomics[_491], _493);
         ShouldReportInstrumentation = false;
-        if ((_485 & _483) == 0u)
+        if ((_495 & _493) == 0u)
         {
-            InstrumentationData.data[_480] = uvec4(43981u, 0u, inst, _474);
+            InstrumentationData.data[_490] = uvec4(43981u, 0u, inst, _484);
             memoryBarrierBuffer();
-            uint _493 = atomicOr(InstrumentationControlData.atomics[_481], _483 << 16u);
+            uint _503 = atomicOr(InstrumentationControlData.atomics[_491], _493 << 16u);
             memoryBarrierBuffer();
         }
     }
+}
+
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
 }
 
 void main()
@@ -201,11 +206,11 @@ void main()
     uint _428 = InvocationID;
     bool _427 = ValidateBDALoadStore(registers._m2, _45, 4u, 2u, _428, true);
     AssumeTrue(_427, 1u);
-    uint _435 = atomicAdd(PhysicalPointerUintArray(registers._m2).value[gl_GlobalInvocationID.x], 1u);
-    uint _437 = InvocationID;
-    bool _436 = ValidateBDALoadStore(registers._m2, _45, 4u, 2u, _437, true);
-    AssumeTrue(_436, 2u);
-    uint _440 = atomicCompSwap(PhysicalPointerUintArray(registers._m2).value[gl_GlobalInvocationID.x], 5u, 6u);
+    uint _444 = atomicAdd(PhysicalPointerUintArray(registers._m2).value[ByteAddressMask(gl_GlobalInvocationID.x, 4u)], 1u);
+    uint _446 = InvocationID;
+    bool _445 = ValidateBDALoadStore(registers._m2, _45, 4u, 2u, _446, true);
+    AssumeTrue(_445, 2u);
+    uint _450 = atomicCompSwap(PhysicalPointerUintArray(registers._m2).value[ByteAddressMask(gl_GlobalInvocationID.x, 4u)], 5u, 6u);
 }
 
 
@@ -214,7 +219,7 @@ void main()
 ; SPIR-V
 ; Version: 1.3
 ; Generator: Unknown(30017); 21022
-; Bound: 499
+; Bound: 509
 ; Schema: 0
 OpCapability Shader
 OpCapability Int64
@@ -319,18 +324,21 @@ OpName %401 "lock_mask"
 OpName %404 "prev_lock"
 OpName %407 "has_complete_self_lock"
 OpName %423 "hazard"
-OpName %430 "PhysicalPointerUintArray"
-OpMemberName %430 0 "value"
-OpName %445 "ShouldReportInstrumentation"
-OpName %448 "InstrumentationControlDataSSBO"
-OpMemberName %448 0 "atomics"
-OpName %450 "InstrumentationControlData"
-OpName %452 "InstrumentationDataSSBO"
-OpMemberName %452 0 "data"
-OpName %454 "InstrumentationData"
-OpName %458 "AssumeTrue"
-OpName %456 "value"
-OpName %457 "inst"
+OpName %432 "ByteAddressMask"
+OpName %430 "index"
+OpName %431 "stride"
+OpName %439 "PhysicalPointerUintArray"
+OpMemberName %439 0 "value"
+OpName %455 "ShouldReportInstrumentation"
+OpName %458 "InstrumentationControlDataSSBO"
+OpMemberName %458 0 "atomics"
+OpName %460 "InstrumentationControlData"
+OpName %462 "InstrumentationDataSSBO"
+OpMemberName %462 0 "data"
+OpName %464 "InstrumentationData"
+OpName %468 "AssumeTrue"
+OpName %466 "value"
+OpName %467 "inst"
 OpDecorate %7 Block
 OpMemberDecorate %7 0 Offset 0
 OpMemberDecorate %7 1 Offset 8
@@ -359,19 +367,19 @@ OpMemberDecorate %94 0 Offset 0
 OpDecorate %94 Block
 OpDecorate %96 DescriptorSet 0
 OpDecorate %96 Binding 2
-OpDecorate %429 ArrayStride 4
-OpMemberDecorate %430 0 Offset 0
-OpDecorate %430 Block
-OpDecorate %447 ArrayStride 4
-OpMemberDecorate %448 0 Offset 0
-OpDecorate %448 Block
-OpDecorate %450 DescriptorSet 0
-OpDecorate %450 Binding 2
-OpDecorate %451 ArrayStride 16
-OpMemberDecorate %452 0 Offset 0
-OpDecorate %452 Block
-OpDecorate %454 DescriptorSet 0
-OpDecorate %454 Binding 3
+OpDecorate %438 ArrayStride 4
+OpMemberDecorate %439 0 Offset 0
+OpDecorate %439 Block
+OpDecorate %457 ArrayStride 4
+OpMemberDecorate %458 0 Offset 0
+OpDecorate %458 Block
+OpDecorate %460 DescriptorSet 0
+OpDecorate %460 Binding 2
+OpDecorate %461 ArrayStride 16
+OpMemberDecorate %462 0 Offset 0
+OpDecorate %462 Block
+OpDecorate %464 DescriptorSet 0
+OpDecorate %464 Binding 3
 %1 = OpTypeVoid
 %2 = OpTypeFunction %1
 %5 = OpTypeInt 32 0
@@ -469,34 +477,35 @@ OpDecorate %454 Binding 3
 %392 = OpConstant %274 22
 %395 = OpConstant %274 25
 %399 = OpConstant %274 28
-%429 = OpTypeRuntimeArray %5
-%430 = OpTypeStruct %429
-%431 = OpTypePointer PhysicalStorageBuffer %430
-%433 = OpTypePointer PhysicalStorageBuffer %5
-%441 = OpConstant %5 5
-%442 = OpConstant %5 6
-%444 = OpTypePointer Private %88
-%445 = OpVariable %444 Private %108
-%446 = OpTypeVector %5 4
-%447 = OpTypeRuntimeArray %5
-%448 = OpTypeStruct %447
-%449 = OpTypePointer StorageBuffer %448
-%450 = OpVariable %449 StorageBuffer
-%451 = OpTypeRuntimeArray %446
-%452 = OpTypeStruct %451
-%453 = OpTypePointer StorageBuffer %452
-%454 = OpVariable %453 StorageBuffer
-%455 = OpTypeFunction %1 %88 %5
-%469 = OpConstant %5 97
-%470 = OpConstant %5 43981
-%476 = OpConstant %5 51329
-%488 = OpConstantFalse %88
-%491 = OpTypePointer StorageBuffer %446
-%494 = OpConstant %5 72
+%429 = OpTypeFunction %5 %5 %5
+%438 = OpTypeRuntimeArray %5
+%439 = OpTypeStruct %438
+%440 = OpTypePointer PhysicalStorageBuffer %439
+%442 = OpTypePointer PhysicalStorageBuffer %5
+%451 = OpConstant %5 5
+%452 = OpConstant %5 6
+%454 = OpTypePointer Private %88
+%455 = OpVariable %454 Private %108
+%456 = OpTypeVector %5 4
+%457 = OpTypeRuntimeArray %5
+%458 = OpTypeStruct %457
+%459 = OpTypePointer StorageBuffer %458
+%460 = OpVariable %459 StorageBuffer
+%461 = OpTypeRuntimeArray %456
+%462 = OpTypeStruct %461
+%463 = OpTypePointer StorageBuffer %462
+%464 = OpVariable %463 StorageBuffer
+%465 = OpTypeFunction %1 %88 %5
+%479 = OpConstant %5 97
+%480 = OpConstant %5 43981
+%486 = OpConstant %5 51329
+%498 = OpConstantFalse %88
+%501 = OpTypePointer StorageBuffer %456
+%504 = OpConstant %5 72
 %3 = OpFunction %1 None %2
 %4 = OpLabel
-OpBranch %443
-%443 = OpLabel
+OpBranch %453
+%453 = OpLabel
 %34 = OpFunctionCall %5 %24
 OpStore %18 %34
 %36 = OpAccessChain %35 %9 %37
@@ -506,16 +515,18 @@ OpStore %18 %34
 %45 = OpShiftLeftLogical %5 %44 %37
 %428 = OpLoad %5 %18
 %427 = OpFunctionCall %88 %104 %38 %45 %46 %37 %428 %108
-%496 = OpFunctionCall %1 %458 %427 %10
-%432 = OpBitcast %431 %38
-%434 = OpAccessChain %433 %432 %30 %44
-%435 = OpAtomicIAdd %5 %434 %10 %30 %10
-%437 = OpLoad %5 %18
-%436 = OpFunctionCall %88 %104 %38 %45 %46 %37 %437 %108
-%497 = OpFunctionCall %1 %458 %436 %37
-%438 = OpBitcast %431 %38
-%439 = OpAccessChain %433 %438 %30 %44
-%440 = OpAtomicCompareExchange %5 %439 %10 %30 %30 %442 %441
+%506 = OpFunctionCall %1 %468 %427 %10
+%437 = OpFunctionCall %5 %432 %44 %46
+%441 = OpBitcast %440 %38
+%443 = OpAccessChain %442 %441 %30 %437
+%444 = OpAtomicIAdd %5 %443 %10 %30 %10
+%446 = OpLoad %5 %18
+%445 = OpFunctionCall %88 %104 %38 %45 %46 %37 %446 %108
+%507 = OpFunctionCall %1 %468 %445 %37
+%447 = OpFunctionCall %5 %432 %44 %46
+%448 = OpBitcast %440 %38
+%449 = OpAccessChain %442 %448 %30 %447
+%450 = OpAtomicCompareExchange %5 %449 %10 %30 %30 %452 %451
 OpReturn
 OpFunctionEnd
 %24 = OpFunction %5 None %23
@@ -849,49 +860,57 @@ OpBranch %412
 %425 = OpLogicalOr %88 %424 %407
 OpReturnValue %425
 OpFunctionEnd
-%458 = OpFunction %1 None %455
-%456 = OpFunctionParameter %88
-%457 = OpFunctionParameter %5
-%459 = OpLabel
-%462 = OpLogicalNot %88 %456
-%463 = OpLoad %88 %445
-%464 = OpLogicalAnd %88 %462 %463
-OpSelectionMerge %460 None
-OpBranchConditional %464 %461 %460
-%461 = OpLabel
-%467 = OpIMul %5 %457 %469
-%468 = OpBitwiseXor %5 %467 %470
-%471 = OpArrayLength %5 %450 0
-%472 = OpISub %5 %471 %37
-%473 = OpAccessChain %28 %450 %30 %472
-%474 = OpLoad %5 %473
-%475 = OpIMul %5 %474 %476
-%477 = OpBitwiseXor %5 %468 %475
-%478 = OpArrayLength %5 %454 0
-%479 = OpISub %5 %478 %10
-%480 = OpBitwiseAnd %5 %477 %479
-%481 = OpShiftRightLogical %5 %480 %46
-%482 = OpBitwiseAnd %5 %480 %124
-%483 = OpShiftLeftLogical %5 %10 %482
-%484 = OpAccessChain %28 %450 %30 %481
-%485 = OpAtomicOr %5 %484 %10 %30 %483
-%486 = OpBitwiseAnd %5 %485 %483
-%487 = OpIEqual %88 %486 %30
-OpStore %445 %488
-OpSelectionMerge %466 None
-OpBranchConditional %487 %465 %466
-%465 = OpLabel
-%489 = OpCompositeConstruct %446 %470 %30 %457 %474
-%490 = OpShiftLeftLogical %5 %483 %213
-%492 = OpAccessChain %491 %454 %30 %480
-OpStore %492 %489
-OpMemoryBarrier %10 %494
-%493 = OpAtomicOr %5 %484 %10 %30 %490
-OpMemoryBarrier %10 %494
-OpBranch %466
-%466 = OpLabel
-OpBranch %460
-%460 = OpLabel
+%432 = OpFunction %5 None %429
+%430 = OpFunctionParameter %5
+%431 = OpFunctionParameter %5
+%433 = OpLabel
+%434 = OpUDiv %5 %123 %431
+%435 = OpBitwiseAnd %5 %430 %434
+OpReturnValue %435
+OpFunctionEnd
+%468 = OpFunction %1 None %465
+%466 = OpFunctionParameter %88
+%467 = OpFunctionParameter %5
+%469 = OpLabel
+%472 = OpLogicalNot %88 %466
+%473 = OpLoad %88 %455
+%474 = OpLogicalAnd %88 %472 %473
+OpSelectionMerge %470 None
+OpBranchConditional %474 %471 %470
+%471 = OpLabel
+%477 = OpIMul %5 %467 %479
+%478 = OpBitwiseXor %5 %477 %480
+%481 = OpArrayLength %5 %460 0
+%482 = OpISub %5 %481 %37
+%483 = OpAccessChain %28 %460 %30 %482
+%484 = OpLoad %5 %483
+%485 = OpIMul %5 %484 %486
+%487 = OpBitwiseXor %5 %478 %485
+%488 = OpArrayLength %5 %464 0
+%489 = OpISub %5 %488 %10
+%490 = OpBitwiseAnd %5 %487 %489
+%491 = OpShiftRightLogical %5 %490 %46
+%492 = OpBitwiseAnd %5 %490 %124
+%493 = OpShiftLeftLogical %5 %10 %492
+%494 = OpAccessChain %28 %460 %30 %491
+%495 = OpAtomicOr %5 %494 %10 %30 %493
+%496 = OpBitwiseAnd %5 %495 %493
+%497 = OpIEqual %88 %496 %30
+OpStore %455 %498
+OpSelectionMerge %476 None
+OpBranchConditional %497 %475 %476
+%475 = OpLabel
+%499 = OpCompositeConstruct %456 %480 %30 %467 %484
+%500 = OpShiftLeftLogical %5 %493 %213
+%502 = OpAccessChain %501 %464 %30 %490
+OpStore %502 %499
+OpMemoryBarrier %10 %504
+%503 = OpAtomicOr %5 %494 %10 %30 %500
+OpMemoryBarrier %10 %504
+OpBranch %476
+%476 = OpLabel
+OpBranch %470
+%470 = OpLabel
 OpReturn
 OpFunctionEnd
 #endif

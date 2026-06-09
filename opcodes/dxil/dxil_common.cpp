@@ -322,7 +322,7 @@ bool extract_raw_buffer_access_split(const llvm::Value *index, unsigned stride,
 }
 
 spv::Id build_index_divider(Converter::Impl &impl, const llvm::Value *offset,
-                            unsigned addr_shift_log2, unsigned vecsize)
+                            unsigned addr_shift_log2, unsigned vecsize, bool byte_address_wrap)
 {
 	auto &builder = impl.builder();
 	// Attempt to do trivial constant folding to make output a little more sensible to read.
@@ -366,9 +366,34 @@ spv::Id build_index_divider(Converter::Impl &impl, const llvm::Value *offset,
 			bias_id = scaled_id;
 
 		index_id = bias_id;
+
+		if (byte_address_wrap)
+		{
+			// We should never hit vectorized uvec3 path for BAB here.
+			assert((vecsize & (vecsize - 1)) == 0);
+
+			// If we have application doing N * index we cannot blindly turn that into SSBO.u32[index].
+			// If the implementation implements this without strict u32 wrapping (e.g. Adreno),
+			// then we will end up with false positive robustness. We must observe the wrapped addressing,
+			// and the simplest way to achieve that is to mask the final index.
+			spv::Id call_id = impl.spirv_module.get_helper_call_id(HelperCall::ByteAddressMask);
+			auto *mask = impl.allocate(spv::OpFunctionCall, builder.makeUintType(32));
+			mask->add_id(call_id);
+			mask->add_id(index_id);
+			mask->add_id(builder.makeUintConstant(vecsize << addr_shift_log2));
+			impl.add(mask);
+
+			index_id = mask->id;
+		}
+
+		// For structured buffer, if we want to be strictly correct, we want clamping behavior rather than
+		// masking behavior, but real world implementations like NVIDIA and Intel seem to compute the offset
+		// in 32-bit anyway with wraparound, so we can be lax for now.
 	}
 	else
 	{
+		// This path implicitly gets the wrapping right since it starts with the final byte address offset,
+		// and shifts down. This will always work as intended.
 		assert(vecsize == 1);
 		index_id = build_index_divider_fallback(impl, offset, addr_shift_log2);
 	}

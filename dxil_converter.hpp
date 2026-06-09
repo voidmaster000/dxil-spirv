@@ -273,6 +273,7 @@ enum class Option : uint32_t
 	ViewInstancing = 49,
 	MixedDotProduct = 50,
 	ComputeShaderDerivativesQuad = 51,
+	SSBOAddressingBehavior = 52,
 	Count
 };
 
@@ -875,6 +876,23 @@ struct OptionComputeShaderDerivativesQuad : OptionBase
 	}
 
 	bool supports_quad = false;
+};
+
+struct OptionSSBOAddressingBehavior : OptionBase
+{
+	OptionSSBOAddressingBehavior()
+		: OptionBase(Option::SSBOAddressingBehavior)
+	{
+	}
+
+	// The implementation computes a 32-bit offset when resolving OpAccessChain,
+	// then computes robustness on the result.
+	// This behavior is convenient for us when implementing byte address buffers,
+	bool ssbo_wraps_32bit_offset_before_robustness = false;
+
+	// For per-element NV_raw_access_chains, does the implementation compute the product before checking robustness?
+	// If not, we need explicit wrap to do optimized BAB.
+	bool raw_access_chain_wraps_32bit_offset_before_robustness = false;
 };
 
 struct DescriptorTableEntry

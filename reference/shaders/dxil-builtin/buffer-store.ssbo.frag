@@ -20,14 +20,19 @@ layout(set = 0, binding = 0) uniform writeonly imageBuffer _8;
 layout(location = 0) flat in uint INDEX;
 layout(location = 0, component = 1) flat in vec2 DATA;
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     imageStore(_8, int(INDEX), vec4(DATA.x, DATA.y, DATA.x, DATA.x));
-    _14._m0[INDEX] = uvec2(floatBitsToUint(DATA.x), floatBitsToUint(DATA.y));
+    _14._m0[ByteAddressMask(INDEX, 8u)] = uvec2(floatBitsToUint(DATA.x), floatBitsToUint(DATA.y));
     _18._m0[INDEX] = uvec2(floatBitsToUint(DATA.x), floatBitsToUint(DATA.y));
-    uint _52 = (INDEX * 5u) + 3u;
-    _22._m0[_52] = floatBitsToUint(DATA.x);
-    _22._m0[_52 + 1u] = floatBitsToUint(DATA.y);
+    uint _63 = (INDEX * 5u) + 3u;
+    _22._m0[_63] = floatBitsToUint(DATA.x);
+    _22._m0[_63 + 1u] = floatBitsToUint(DATA.y);
 }
 
 
@@ -36,7 +41,7 @@ void main()
 ; SPIR-V
 ; Version: 1.3
 ; Generator: Unknown(30017); 21022
-; Bound: 61
+; Bound: 72
 ; Schema: 0
 OpCapability Shader
 OpCapability ImageBuffer
@@ -50,6 +55,9 @@ OpName %16 "SSBO"
 OpName %20 "SSBO"
 OpName %24 "INDEX"
 OpName %27 "DATA"
+OpName %46 "ByteAddressMask"
+OpName %44 "index"
+OpName %45 "stride"
 OpDecorate %8 DescriptorSet 0
 OpDecorate %8 Binding 0
 OpDecorate %8 NonReadable
@@ -106,13 +114,16 @@ OpDecorate %27 Component 1
 %34 = OpConstant %9 1
 %37 = OpTypeVector %5 4
 %42 = OpConstant %9 3
-%44 = OpTypePointer StorageBuffer %10
-%51 = OpConstant %9 5
-%55 = OpTypePointer StorageBuffer %9
+%43 = OpTypeFunction %9 %9 %9
+%49 = OpConstant %9 4294967295
+%53 = OpConstant %9 8
+%55 = OpTypePointer StorageBuffer %10
+%62 = OpConstant %9 5
+%66 = OpTypePointer StorageBuffer %9
 %3 = OpFunction %1 None %2
 %4 = OpLabel
-OpBranch %59
-%59 = OpLabel
+OpBranch %70
+%70 = OpLabel
 %28 = OpLoad %6 %8
 %30 = OpAccessChain %29 %27 %31
 %32 = OpLoad %5 %30
@@ -124,23 +135,32 @@ OpImageWrite %28 %36 %38
 %39 = OpBitcast %9 %32
 %40 = OpBitcast %9 %35
 %41 = OpShiftLeftLogical %9 %36 %42
-%43 = OpCompositeConstruct %10 %39 %40
-%45 = OpAccessChain %44 %14 %31 %36
-OpStore %45 %43
-%46 = OpBitcast %9 %32
-%47 = OpBitcast %9 %35
-%48 = OpCompositeConstruct %10 %46 %47
-%49 = OpAccessChain %44 %18 %31 %36
-OpStore %49 %48
-%50 = OpIMul %9 %36 %51
-%52 = OpIAdd %9 %50 %42
-%53 = OpBitcast %9 %32
-%54 = OpBitcast %9 %35
-%56 = OpAccessChain %55 %22 %31 %52
-OpStore %56 %53
-%58 = OpIAdd %9 %52 %34
-%57 = OpAccessChain %55 %22 %31 %58
-OpStore %57 %54
+%52 = OpFunctionCall %9 %46 %36 %53
+%54 = OpCompositeConstruct %10 %39 %40
+%56 = OpAccessChain %55 %14 %31 %52
+OpStore %56 %54
+%57 = OpBitcast %9 %32
+%58 = OpBitcast %9 %35
+%59 = OpCompositeConstruct %10 %57 %58
+%60 = OpAccessChain %55 %18 %31 %36
+OpStore %60 %59
+%61 = OpIMul %9 %36 %62
+%63 = OpIAdd %9 %61 %42
+%64 = OpBitcast %9 %32
+%65 = OpBitcast %9 %35
+%67 = OpAccessChain %66 %22 %31 %63
+OpStore %67 %64
+%69 = OpIAdd %9 %63 %34
+%68 = OpAccessChain %66 %22 %31 %69
+OpStore %68 %65
 OpReturn
+OpFunctionEnd
+%46 = OpFunction %9 None %43
+%44 = OpFunctionParameter %9
+%45 = OpFunctionParameter %9
+%47 = OpLabel
+%48 = OpUDiv %9 %49 %45
+%50 = OpBitwiseAnd %9 %44 %48
+OpReturnValue %50
 OpFunctionEnd
 #endif

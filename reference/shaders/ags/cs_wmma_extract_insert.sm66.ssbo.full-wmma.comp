@@ -21,6 +21,11 @@ layout(set = 0, binding = 0, std430) writeonly buffer _21_23
     uint _m0[];
 } _23;
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     coopmat<floate4m3_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA> _30;
@@ -37,24 +42,24 @@ void main()
         uint _40;
         _39 = _30;
         _40 = 0u;
-        coopmat<floate4m3_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA> _94;
+        coopmat<floate4m3_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA> _104;
         coopmat<floate4m3_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA> _43;
-        coopmat<floate4m3_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA> _74;
+        coopmat<floate4m3_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA> _84;
         for (;;)
         {
             _43 = _39;
             uint _44 = _40 * 4u;
             uint _62 = (fe4m3vec4(_43[_44 + 0u], _43[_44 + 1u], _43[_44 + 2u], _43[_44 + 3u]));
             uint _64 = _40 + (_32 * gl_LocalInvocationIndex);
-            _23._m0[_64 + 64u] = _62;
-            _74 = _39;
-            u8vec4 _76 = unpack8(_62 ^ 16711935u);
-            uint _77 = _40 * 4u;
-            _74[_77 + 0u] = uintBitsToFloate4m3EXT(_76.x);
-            _74[_77 + 1u] = uintBitsToFloate4m3EXT(_76.y);
-            _74[_77 + 2u] = uintBitsToFloate4m3EXT(_76.z);
-            _74[_77 + 3u] = uintBitsToFloate4m3EXT(_76.w);
-            _94 = _74;
+            _23._m0[ByteAddressMask(_64 + 64u, 4u)] = _62;
+            _84 = _39;
+            u8vec4 _86 = unpack8(_62 ^ 16711935u);
+            uint _87 = _40 * 4u;
+            _84[_87 + 0u] = uintBitsToFloate4m3EXT(_86.x);
+            _84[_87 + 1u] = uintBitsToFloate4m3EXT(_86.y);
+            _84[_87 + 2u] = uintBitsToFloate4m3EXT(_86.z);
+            _84[_87 + 3u] = uintBitsToFloate4m3EXT(_86.w);
+            _104 = _84;
             uint _41 = _40 + 1u;
             if (_41 == _32)
             {
@@ -62,11 +67,11 @@ void main()
             }
             else
             {
-                _39 = _94;
+                _39 = _104;
                 _40 = _41;
             }
         }
-        _36 = _94;
+        _36 = _104;
     }
     coopMatStore(_36, _19._m0, 0u, 16u, gl_CooperativeMatrixLayoutRowMajor);
 }
@@ -78,7 +83,7 @@ void main()
 ; SPIR-V
 ; Version: 1.6
 ; Generator: Unknown(30017); 21022
-; Bound: 102
+; Bound: 112
 ; Schema: 0
 OpCapability Shader
 OpCapability Int8
@@ -97,6 +102,9 @@ OpName %9 "main"
 OpName %13 "SSBO"
 OpName %17 "SSBO"
 OpName %21 "SSBO"
+OpName %73 "ByteAddressMask"
+OpName %71 "index"
+OpName %72 "stride"
 OpDecorate %12 ArrayStride 1
 OpMemberDecorate %13 0 Offset 0
 OpDecorate %13 Block
@@ -152,28 +160,30 @@ OpDecorate %25 BuiltIn LocalInvocationIndex
 %60 = OpTypeVector %1 4
 %67 = OpConstant %2 256
 %69 = OpConstant %2 64
-%70 = OpTypePointer StorageBuffer %2
-%73 = OpConstant %2 16711935
-%75 = OpTypeVector %11 4
+%70 = OpTypeFunction %2 %2 %2
+%76 = OpConstant %2 4294967295
+%80 = OpTypePointer StorageBuffer %2
+%83 = OpConstant %2 16711935
+%85 = OpTypeVector %11 4
 %9 = OpFunction %7 None %8
 %10 = OpLabel
 %43 = OpVariable %42 Function
-%74 = OpVariable %42 Function
-OpBranch %96
-%96 = OpLabel
+%84 = OpVariable %42 Function
+OpBranch %106
+%106 = OpLabel
 %26 = OpLoad %2 %25
 %29 = OpAccessChain %28 %15 %3 %3
 %30 = OpCooperativeMatrixLoadKHR %5 %29 %3 %4 NonPrivatePointer
 %31 = OpCooperativeMatrixLengthKHR %2 %5
 %32 = OpUDiv %2 %31 %33
 %35 = OpIEqual %34 %32 %3
-OpSelectionMerge %100 None
-OpBranchConditional %35 %100 %97
-%97 = OpLabel
-OpBranch %98
-%98 = OpLabel
-%39 = OpPhi %5 %30 %97 %94 %98
-%40 = OpPhi %2 %3 %97 %41 %98
+OpSelectionMerge %110 None
+OpBranchConditional %35 %110 %107
+%107 = OpLabel
+OpBranch %108
+%108 = OpLabel
+%39 = OpPhi %5 %30 %107 %104 %108
+%40 = OpPhi %2 %3 %107 %41 %108
 OpStore %43 %39
 %44 = OpIMul %2 %40 %33
 %45 = OpIAdd %2 %44 %3
@@ -195,43 +205,52 @@ OpStore %43 %39
 %65 = OpShiftLeftLogical %2 %64 %54
 %66 = OpIAdd %2 %65 %67
 %68 = OpIAdd %2 %64 %69
-%71 = OpAccessChain %70 %23 %3 %68
-OpStore %71 %62 NonPrivatePointer
-%72 = OpBitwiseXor %2 %62 %73
-OpStore %74 %39
-%76 = OpBitcast %75 %72
-%77 = OpIMul %2 %40 %33
-%78 = OpCompositeExtract %11 %76 0
-%79 = OpBitcast %1 %78
-%80 = OpIAdd %2 %77 %3
-%81 = OpInBoundsAccessChain %46 %74 %80
-OpStore %81 %79
-%82 = OpCompositeExtract %11 %76 1
-%83 = OpBitcast %1 %82
-%84 = OpIAdd %2 %77 %50
-%85 = OpInBoundsAccessChain %46 %74 %84
-OpStore %85 %83
-%86 = OpCompositeExtract %11 %76 2
-%87 = OpBitcast %1 %86
-%88 = OpIAdd %2 %77 %54
-%89 = OpInBoundsAccessChain %46 %74 %88
-OpStore %89 %87
-%90 = OpCompositeExtract %11 %76 3
-%91 = OpBitcast %1 %90
-%92 = OpIAdd %2 %77 %6
-%93 = OpInBoundsAccessChain %46 %74 %92
-OpStore %93 %91
-%94 = OpLoad %5 %74
+%79 = OpFunctionCall %2 %73 %68 %33
+%81 = OpAccessChain %80 %23 %3 %79
+OpStore %81 %62 NonPrivatePointer
+%82 = OpBitwiseXor %2 %62 %83
+OpStore %84 %39
+%86 = OpBitcast %85 %82
+%87 = OpIMul %2 %40 %33
+%88 = OpCompositeExtract %11 %86 0
+%89 = OpBitcast %1 %88
+%90 = OpIAdd %2 %87 %3
+%91 = OpInBoundsAccessChain %46 %84 %90
+OpStore %91 %89
+%92 = OpCompositeExtract %11 %86 1
+%93 = OpBitcast %1 %92
+%94 = OpIAdd %2 %87 %50
+%95 = OpInBoundsAccessChain %46 %84 %94
+OpStore %95 %93
+%96 = OpCompositeExtract %11 %86 2
+%97 = OpBitcast %1 %96
+%98 = OpIAdd %2 %87 %54
+%99 = OpInBoundsAccessChain %46 %84 %98
+OpStore %99 %97
+%100 = OpCompositeExtract %11 %86 3
+%101 = OpBitcast %1 %100
+%102 = OpIAdd %2 %87 %6
+%103 = OpInBoundsAccessChain %46 %84 %102
+OpStore %103 %101
+%104 = OpLoad %5 %84
 %41 = OpIAdd %2 %40 %50
-%95 = OpIEqual %34 %41 %32
-OpLoopMerge %99 %98 None
-OpBranchConditional %95 %99 %98
-%99 = OpLabel
-OpBranch %100
-%100 = OpLabel
-%36 = OpPhi %5 %30 %96 %94 %99
+%105 = OpIEqual %34 %41 %32
+OpLoopMerge %109 %108 None
+OpBranchConditional %105 %109 %108
+%109 = OpLabel
+OpBranch %110
+%110 = OpLabel
+%36 = OpPhi %5 %30 %106 %104 %109
 %38 = OpAccessChain %28 %19 %3 %3
 OpCooperativeMatrixStoreKHR %38 %36 %3 %4 NonPrivatePointer
 OpReturn
+OpFunctionEnd
+%73 = OpFunction %2 None %70
+%71 = OpFunctionParameter %2
+%72 = OpFunctionParameter %2
+%74 = OpLabel
+%75 = OpUDiv %2 %76 %72
+%77 = OpBitwiseAnd %2 %71 %75
+OpReturnValue %77
 OpFunctionEnd
 #endif

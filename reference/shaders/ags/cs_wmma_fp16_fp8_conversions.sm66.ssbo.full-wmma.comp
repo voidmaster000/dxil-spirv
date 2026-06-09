@@ -18,13 +18,18 @@ layout(set = 0, binding = 0, std430) writeonly buffer SSBO
     uvec2 _m0[];
 } _17;
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     coopmat<floate4m3_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA> _36 = coopmat<floate4m3_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA>(coopmat<float16_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA>(uint16BitsToFloat16(uint16_t(gl_WorkGroupID.x))));
     coopmat<floate4m3_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA> _37 = coopmat<floate4m3_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA>(coopmat<float16_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA>(uint16BitsToFloat16(uint16_t(gl_WorkGroupID.x | 32768u))));
     if (gl_LocalInvocationIndex == 0u)
     {
-        _17._m0[gl_WorkGroupID.x] = uvec2((fe4m3vec4(_36[0], _36[1], _36[2], _36[3])), (fe4m3vec4(_37[0], _37[1], _37[2], _37[3])));
+        _17._m0[ByteAddressMask(gl_WorkGroupID.x, 8u)] = uvec2((fe4m3vec4(_36[0], _36[1], _36[2], _36[3])), (fe4m3vec4(_37[0], _37[1], _37[2], _37[3])));
     }
 }
 
@@ -35,7 +40,7 @@ void main()
 ; SPIR-V
 ; Version: 1.6
 ; Generator: Unknown(30017); 21022
-; Bound: 61
+; Bound: 72
 ; Schema: 0
 OpCapability Shader
 OpCapability Float16
@@ -54,6 +59,9 @@ OpExecutionMode %11 LocalSize 32 1 1
 OpExecutionMode %11 DenormPreserve 16
 OpName %11 "main"
 OpName %15 "SSBO"
+OpName %57 "ByteAddressMask"
+OpName %55 "index"
+OpName %56 "stride"
 OpDecorate %14 ArrayStride 8
 OpMemberDecorate %15 0 Offset 0
 OpDecorate %15 Block
@@ -86,11 +94,14 @@ OpDecorate %23 BuiltIn WorkgroupId
 %32 = OpConstant %2 32768
 %42 = OpTypeVector %7 4
 %51 = OpTypeBool
-%55 = OpTypePointer StorageBuffer %13
+%54 = OpTypeFunction %2 %2 %2
+%60 = OpConstant %2 4294967295
+%64 = OpConstant %2 8
+%66 = OpTypePointer StorageBuffer %13
 %11 = OpFunction %9 None %10
 %12 = OpLabel
-OpBranch %57
-%57 = OpLabel
+OpBranch %68
+%68 = OpLabel
 %20 = OpLoad %2 %19
 %24 = OpAccessChain %18 %23 %3
 %25 = OpLoad %2 %24
@@ -116,15 +127,24 @@ OpBranch %57
 %49 = OpCompositeConstruct %42 %45 %46 %47 %48
 %50 = OpBitcast %2 %49
 %52 = OpIEqual %51 %20 %3
-OpSelectionMerge %59 None
-OpBranchConditional %52 %58 %59
-%58 = OpLabel
+OpSelectionMerge %70 None
+OpBranchConditional %52 %69 %70
+%69 = OpLabel
 %53 = OpShiftLeftLogical %2 %25 %6
-%54 = OpCompositeConstruct %13 %44 %50
-%56 = OpAccessChain %55 %17 %3 %25
-OpStore %56 %54 NonPrivatePointer
-OpBranch %59
-%59 = OpLabel
+%63 = OpFunctionCall %2 %57 %25 %64
+%65 = OpCompositeConstruct %13 %44 %50
+%67 = OpAccessChain %66 %17 %3 %63
+OpStore %67 %65 NonPrivatePointer
+OpBranch %70
+%70 = OpLabel
 OpReturn
+OpFunctionEnd
+%57 = OpFunction %2 None %54
+%55 = OpFunctionParameter %2
+%56 = OpFunctionParameter %2
+%58 = OpLabel
+%59 = OpUDiv %2 %60 %56
+%61 = OpBitwiseAnd %2 %55 %59
+OpReturnValue %61
 OpFunctionEnd
 #endif

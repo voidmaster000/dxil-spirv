@@ -14,6 +14,11 @@ layout(set = 0, binding = 7, r32ui) uniform uimageBuffer _32;
 layout(location = 0) flat in uvec3 TEXCOORD;
 layout(location = 0) out uint SV_Target;
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     uint _60 = imageAtomicAdd(_8, int(TEXCOORD.x), 1u);
@@ -26,8 +31,8 @@ void main()
     int _91 = imageAtomicMin(_27, int(TEXCOORD.x), int(8u));
     int _98 = imageAtomicMax(_30, ivec2(uvec2(TEXCOORD.x, TEXCOORD.y)), int(9u));
     uint _106 = imageAtomicAdd(_31, int((TEXCOORD.x * 4u) + 2u), 10u);
-    uint _111 = imageAtomicMax(_32, int(TEXCOORD.x), 12u);
-    SV_Target = (((((((((_64 + _60) + _68) + _73) + _78) + _82) + _86) + uint(_91)) + uint(_98)) + _106) + _111;
+    uint _121 = imageAtomicMax(_32, int(ByteAddressMask(TEXCOORD.x, 4u)), 12u);
+    SV_Target = (((((((((_64 + _60) + _68) + _73) + _78) + _82) + _86) + uint(_91)) + uint(_98)) + _106) + _121;
 }
 
 
@@ -36,7 +41,7 @@ void main()
 ; SPIR-V
 ; Version: 1.3
 ; Generator: Unknown(30017); 21022
-; Bound: 116
+; Bound: 126
 ; Schema: 0
 OpCapability Shader
 OpCapability Image1D
@@ -47,6 +52,9 @@ OpExecutionMode %3 OriginUpperLeft
 OpName %3 "main"
 OpName %35 "TEXCOORD"
 OpName %37 "SV_Target"
+OpName %113 "ByteAddressMask"
+OpName %111 "index"
+OpName %112 "stride"
 OpDecorate %8 DescriptorSet 0
 OpDecorate %8 Binding 0
 OpDecorate %11 DescriptorSet 0
@@ -120,11 +128,13 @@ OpDecorate %37 Location 0
 %92 = OpConstant %5 8
 %99 = OpConstant %5 9
 %107 = OpConstant %5 10
-%112 = OpConstant %5 12
+%110 = OpTypeFunction %5 %5 %5
+%116 = OpConstant %5 4294967295
+%122 = OpConstant %5 12
 %3 = OpFunction %1 None %2
 %4 = OpLabel
-OpBranch %114
-%114 = OpLabel
+OpBranch %124
+%124 = OpLabel
 %38 = OpLoad %21 %32
 %39 = OpLoad %21 %31
 %40 = OpLoad %28 %30
@@ -182,10 +192,19 @@ OpBranch %114
 %106 = OpAtomicIAdd %5 %105 %53 %50 %107
 %108 = OpIAdd %5 %102 %106
 %109 = OpShiftLeftLogical %5 %51 %56
-%110 = OpImageTexelPointer %58 %32 %51 %50
-%111 = OpAtomicUMax %5 %110 %53 %50 %112
-%113 = OpIAdd %5 %108 %111
-OpStore %37 %113
+%119 = OpFunctionCall %5 %113 %51 %74
+%120 = OpImageTexelPointer %58 %32 %119 %50
+%121 = OpAtomicUMax %5 %120 %53 %50 %122
+%123 = OpIAdd %5 %108 %121
+OpStore %37 %123
 OpReturn
+OpFunctionEnd
+%113 = OpFunction %5 None %110
+%111 = OpFunctionParameter %5
+%112 = OpFunctionParameter %5
+%114 = OpLabel
+%115 = OpUDiv %5 %116 %112
+%117 = OpBitwiseAnd %5 %111 %115
+OpReturnValue %117
 OpFunctionEnd
 #endif

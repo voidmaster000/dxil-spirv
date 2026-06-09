@@ -278,6 +278,8 @@ def cross_compile_dxil(shader, args, paths, is_asm):
         hlsl_cmd += ['--view-instance-to-viewport-spec-id', '1001']
     if '.mixed-float-dot-product.' in shader:
         hlsl_cmd += ['--mixed-float-dot-product']
+    if is_asm or ('.assume-32bit-wrap.' in shader):
+        hlsl_cmd += ['--assume-ssbo-32bit-wrapping']
 
     subprocess.check_call(hlsl_cmd)
     if is_asm:

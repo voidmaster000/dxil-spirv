@@ -9629,6 +9629,14 @@ void Converter::Impl::set_option(const OptionBase &cap)
 		break;
 	}
 
+	case Option::SSBOAddressingBehavior:
+	{
+		auto &c = static_cast<const OptionSSBOAddressingBehavior &>(cap);
+		options.ssbo_wraps_32bit_before_robustness = c.ssbo_wraps_32bit_offset_before_robustness;
+		options.raw_access_chain_wraps_32bit_before_robustness = c.raw_access_chain_wraps_32bit_offset_before_robustness;
+		break;
+	}
+
 	default:
 		break;
 	}

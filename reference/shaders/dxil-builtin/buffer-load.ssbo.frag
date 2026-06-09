@@ -37,16 +37,23 @@ layout(set = 0, binding = 0, r32f) uniform readonly imageBuffer _26;
 layout(location = 0) flat in uint TEXCOORD;
 layout(location = 0) out vec2 SV_Target;
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     vec4 _48 = texelFetch(_8, int(TEXCOORD));
     vec4 _51 = imageLoad(_26, int(TEXCOORD));
-    vec2 _78 = uintBitsToFloat(_18._m0[TEXCOORD]);
-    vec2 _85 = uintBitsToFloat(_34._m0[TEXCOORD]);
-    vec3 _96 = uintBitsToFloat(_23._m0[TEXCOORD * 2u]);
-    vec3 _106 = uintBitsToFloat(_38._m0[(TEXCOORD * 2u) + 1u]);
-    SV_Target.x = ((((((_51.x + _48.x) + uintBitsToFloat(_14._m0[TEXCOORD].x)) + uintBitsToFloat(_30._m0[TEXCOORD].x)) + _78.x) + _85.x) + _96.y) + _106.y;
-    SV_Target.y = ((((((_51.y + _48.y) + uintBitsToFloat(_14._m0[TEXCOORD].y)) + uintBitsToFloat(_30._m0[TEXCOORD].y)) + _78.y) + _85.y) + _96.z) + _106.z;
+    uint _67 = ByteAddressMask(TEXCOORD, 8u);
+    uint _79 = ByteAddressMask(TEXCOORD, 8u);
+    vec2 _90 = uintBitsToFloat(_18._m0[TEXCOORD]);
+    vec2 _97 = uintBitsToFloat(_34._m0[TEXCOORD]);
+    vec3 _108 = uintBitsToFloat(_23._m0[TEXCOORD * 2u]);
+    vec3 _118 = uintBitsToFloat(_38._m0[(TEXCOORD * 2u) + 1u]);
+    SV_Target.x = ((((((_51.x + _48.x) + uintBitsToFloat(_14._m0[_67].x)) + uintBitsToFloat(_30._m0[_79].x)) + _90.x) + _97.x) + _108.y) + _118.y;
+    SV_Target.y = ((((((_51.y + _48.y) + uintBitsToFloat(_14._m0[_67].y)) + uintBitsToFloat(_30._m0[_79].y)) + _90.y) + _97.y) + _108.z) + _118.z;
 }
 
 
@@ -55,7 +62,7 @@ void main()
 ; SPIR-V
 ; Version: 1.3
 ; Generator: Unknown(30017); 21022
-; Bound: 116
+; Bound: 128
 ; Schema: 0
 OpCapability Shader
 OpCapability SampledBuffer
@@ -72,6 +79,9 @@ OpName %32 "SSBO"
 OpName %36 "SSBO"
 OpName %40 "TEXCOORD"
 OpName %43 "SV_Target"
+OpName %61 "ByteAddressMask"
+OpName %59 "index"
+OpName %60 "stride"
 OpDecorate %8 DescriptorSet 0
 OpDecorate %8 Binding 0
 OpDecorate %11 ArrayStride 8
@@ -162,17 +172,20 @@ OpDecorate %43 Location 0
 %43 = OpVariable %42 Output
 %47 = OpTypeVector %5 4
 %57 = OpConstant %9 3
-%58 = OpTypePointer StorageBuffer %10
-%60 = OpConstant %9 0
-%91 = OpConstant %9 2
-%92 = OpTypePointer StorageBuffer %19
-%95 = OpTypeVector %5 3
-%102 = OpConstant %9 1
-%111 = OpTypePointer Output %5
+%58 = OpTypeFunction %9 %9 %9
+%64 = OpConstant %9 4294967295
+%68 = OpConstant %9 8
+%69 = OpTypePointer StorageBuffer %10
+%71 = OpConstant %9 0
+%103 = OpConstant %9 2
+%104 = OpTypePointer StorageBuffer %19
+%107 = OpTypeVector %5 3
+%114 = OpConstant %9 1
+%123 = OpTypePointer Output %5
 %3 = OpFunction %1 None %2
 %4 = OpLabel
-OpBranch %114
-%114 = OpLabel
+OpBranch %126
+%126 = OpLabel
 %44 = OpLoad %24 %26
 %45 = OpLoad %6 %8
 %46 = OpLoad %9 %40
@@ -185,57 +198,67 @@ OpBranch %114
 %54 = OpFAdd %5 %52 %49
 %55 = OpFAdd %5 %53 %50
 %56 = OpShiftLeftLogical %9 %46 %57
-%59 = OpAccessChain %58 %14 %60 %46
-%61 = OpLoad %10 %59
-%62 = OpCompositeExtract %9 %61 0
-%63 = OpCompositeExtract %9 %61 1
-%64 = OpBitcast %5 %62
-%65 = OpBitcast %5 %63
-%66 = OpFAdd %5 %54 %64
-%67 = OpFAdd %5 %55 %65
-%68 = OpAccessChain %58 %30 %60 %46
-%69 = OpLoad %10 %68
-%70 = OpCompositeExtract %9 %69 0
-%71 = OpCompositeExtract %9 %69 1
-%72 = OpBitcast %5 %70
-%73 = OpBitcast %5 %71
-%74 = OpFAdd %5 %66 %72
-%75 = OpFAdd %5 %67 %73
-%76 = OpAccessChain %58 %18 %60 %46
-%77 = OpLoad %10 %76
-%78 = OpBitcast %41 %77
-%79 = OpCompositeExtract %5 %78 0
-%80 = OpCompositeExtract %5 %78 1
-%81 = OpFAdd %5 %74 %79
-%82 = OpFAdd %5 %75 %80
-%83 = OpAccessChain %58 %34 %60 %46
-%84 = OpLoad %10 %83
-%85 = OpBitcast %41 %84
-%86 = OpCompositeExtract %5 %85 0
-%87 = OpCompositeExtract %5 %85 1
-%88 = OpFAdd %5 %81 %86
-%89 = OpFAdd %5 %82 %87
-%90 = OpIMul %9 %46 %91
-%93 = OpAccessChain %92 %23 %60 %90
-%94 = OpLoad %19 %93
-%96 = OpBitcast %95 %94
-%97 = OpCompositeExtract %5 %96 1
-%98 = OpCompositeExtract %5 %96 2
-%99 = OpFAdd %5 %88 %97
-%100 = OpFAdd %5 %89 %98
-%101 = OpIMul %9 %46 %91
-%103 = OpIAdd %9 %101 %102
-%104 = OpAccessChain %92 %38 %60 %103
-%105 = OpLoad %19 %104
-%106 = OpBitcast %95 %105
-%107 = OpCompositeExtract %5 %106 1
-%108 = OpCompositeExtract %5 %106 2
-%109 = OpFAdd %5 %99 %107
-%110 = OpFAdd %5 %100 %108
-%112 = OpAccessChain %111 %43 %60
-OpStore %112 %109
-%113 = OpAccessChain %111 %43 %102
-OpStore %113 %110
+%67 = OpFunctionCall %9 %61 %46 %68
+%70 = OpAccessChain %69 %14 %71 %67
+%72 = OpLoad %10 %70
+%73 = OpCompositeExtract %9 %72 0
+%74 = OpCompositeExtract %9 %72 1
+%75 = OpBitcast %5 %73
+%76 = OpBitcast %5 %74
+%77 = OpFAdd %5 %54 %75
+%78 = OpFAdd %5 %55 %76
+%79 = OpFunctionCall %9 %61 %46 %68
+%80 = OpAccessChain %69 %30 %71 %79
+%81 = OpLoad %10 %80
+%82 = OpCompositeExtract %9 %81 0
+%83 = OpCompositeExtract %9 %81 1
+%84 = OpBitcast %5 %82
+%85 = OpBitcast %5 %83
+%86 = OpFAdd %5 %77 %84
+%87 = OpFAdd %5 %78 %85
+%88 = OpAccessChain %69 %18 %71 %46
+%89 = OpLoad %10 %88
+%90 = OpBitcast %41 %89
+%91 = OpCompositeExtract %5 %90 0
+%92 = OpCompositeExtract %5 %90 1
+%93 = OpFAdd %5 %86 %91
+%94 = OpFAdd %5 %87 %92
+%95 = OpAccessChain %69 %34 %71 %46
+%96 = OpLoad %10 %95
+%97 = OpBitcast %41 %96
+%98 = OpCompositeExtract %5 %97 0
+%99 = OpCompositeExtract %5 %97 1
+%100 = OpFAdd %5 %93 %98
+%101 = OpFAdd %5 %94 %99
+%102 = OpIMul %9 %46 %103
+%105 = OpAccessChain %104 %23 %71 %102
+%106 = OpLoad %19 %105
+%108 = OpBitcast %107 %106
+%109 = OpCompositeExtract %5 %108 1
+%110 = OpCompositeExtract %5 %108 2
+%111 = OpFAdd %5 %100 %109
+%112 = OpFAdd %5 %101 %110
+%113 = OpIMul %9 %46 %103
+%115 = OpIAdd %9 %113 %114
+%116 = OpAccessChain %104 %38 %71 %115
+%117 = OpLoad %19 %116
+%118 = OpBitcast %107 %117
+%119 = OpCompositeExtract %5 %118 1
+%120 = OpCompositeExtract %5 %118 2
+%121 = OpFAdd %5 %111 %119
+%122 = OpFAdd %5 %112 %120
+%124 = OpAccessChain %123 %43 %71
+OpStore %124 %121
+%125 = OpAccessChain %123 %43 %114
+OpStore %125 %122
 OpReturn
+OpFunctionEnd
+%61 = OpFunction %9 None %58
+%59 = OpFunctionParameter %9
+%60 = OpFunctionParameter %9
+%62 = OpLabel
+%63 = OpUDiv %9 %64 %60
+%65 = OpBitwiseAnd %9 %59 %63
+OpReturnValue %65
 OpFunctionEnd
 #endif

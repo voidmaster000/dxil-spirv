@@ -22,6 +22,11 @@ layout(set = 0, binding = 0, std430) writeonly buffer SSBO
 
 shared uint _24[512];
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     coopMatStore(coopmat<float16_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA>(coopmat<floate4m3_t, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseA>(uintBitsToFloate4m3EXT(uint8_t(gl_WorkGroupID.x)))), _24, 0u, 32u, gl_CooperativeMatrixLayoutRowMajor);
@@ -34,7 +39,7 @@ void main()
     subgroupBarrier();
     if (gl_LocalInvocationIndex == 0u)
     {
-        _20._m0[gl_WorkGroupID.x] = floatBitsToUint((coopmat<float, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseAccumulator>(_44))[0]);
+        _20._m0[ByteAddressMask(gl_WorkGroupID.x, 4u)] = floatBitsToUint((coopmat<float, gl_ScopeSubgroup, 16u, 16u, gl_MatrixUseAccumulator>(_44))[0]);
     }
 }
 
@@ -45,7 +50,7 @@ void main()
 ; SPIR-V
 ; Version: 1.6
 ; Generator: Unknown(30017); 21022
-; Bound: 57
+; Bound: 68
 ; Schema: 0
 OpCapability Shader
 OpCapability Float16
@@ -64,6 +69,9 @@ OpExecutionMode %15 LocalSize 32 1 1
 OpExecutionMode %15 DenormPreserve 16
 OpName %15 "main"
 OpName %18 "SSBO"
+OpName %54 "ByteAddressMask"
+OpName %52 "index"
+OpName %53 "stride"
 OpDecorate %17 ArrayStride 4
 OpMemberDecorate %18 0 Offset 0
 OpDecorate %18 Block
@@ -104,11 +112,14 @@ OpDecorate %30 BuiltIn WorkgroupId
 %41 = OpConstant %2 32
 %42 = OpConstant %2 24840
 %48 = OpTypeBool
-%51 = OpTypePointer StorageBuffer %2
+%51 = OpTypeFunction %2 %2 %2
+%57 = OpConstant %2 4294967295
+%61 = OpConstant %2 4
+%62 = OpTypePointer StorageBuffer %2
 %15 = OpFunction %13 None %14
 %16 = OpLabel
-OpBranch %53
-%53 = OpLabel
+OpBranch %64
+%64 = OpLabel
 %27 = OpLoad %2 %26
 %31 = OpAccessChain %25 %30 %3
 %32 = OpLoad %2 %31
@@ -127,14 +138,23 @@ OpControlBarrier %6 %6 %42
 %46 = OpCompositeExtract %11 %45 0
 %47 = OpBitcast %2 %46
 %49 = OpIEqual %48 %27 %3
-OpSelectionMerge %55 None
-OpBranchConditional %49 %54 %55
-%54 = OpLabel
+OpSelectionMerge %66 None
+OpBranchConditional %49 %65 %66
+%65 = OpLabel
 %50 = OpShiftLeftLogical %2 %32 %9
-%52 = OpAccessChain %51 %20 %3 %32
-OpStore %52 %47 NonPrivatePointer
-OpBranch %55
-%55 = OpLabel
+%60 = OpFunctionCall %2 %54 %32 %61
+%63 = OpAccessChain %62 %20 %3 %60
+OpStore %63 %47 NonPrivatePointer
+OpBranch %66
+%66 = OpLabel
 OpReturn
+OpFunctionEnd
+%54 = OpFunction %2 None %51
+%52 = OpFunctionParameter %2
+%53 = OpFunctionParameter %2
+%55 = OpLabel
+%56 = OpUDiv %2 %57 %53
+%58 = OpBitwiseAnd %2 %52 %56
+OpReturnValue %58
 OpFunctionEnd
 #endif

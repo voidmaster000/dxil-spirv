@@ -32,12 +32,18 @@ layout(push_constant, std430) uniform RootConstants
     uvec2 _m3;
 } registers;
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     uint _29 = (uint(gl_FragCoord.y) * 1000u) + uint(gl_FragCoord.x);
-    PhysicalPointerUint4CoherentArray _36 = PhysicalPointerUint4CoherentArray(registers._m2);
+    uint _41 = ByteAddressMask(_29, 16u);
+    PhysicalPointerUint4CoherentArray _47 = PhysicalPointerUint4CoherentArray(registers._m2);
     SPIRV_Cross_beginInvocationInterlock();
-    PhysicalPointerUint4CoherentArray(registers._m2).value[_29] = uvec4(_36.value[_29].x + 1u, _36.value[_29].y + 2u, _36.value[_29].z + 3u, _36.value[_29].w + 4u);
+    PhysicalPointerUint4CoherentArray(registers._m2).value[ByteAddressMask(_29, 16u)] = uvec4(_47.value[_41].x + 1u, _47.value[_41].y + 2u, _47.value[_41].z + 3u, _47.value[_41].w + 4u);
     SPIRV_Cross_endInvocationInterlock();
 }
 
@@ -47,7 +53,7 @@ void main()
 ; SPIR-V
 ; Version: 1.3
 ; Generator: Unknown(30017); 21022
-; Bound: 54
+; Bound: 66
 ; Schema: 0
 OpCapability Shader
 OpCapability PhysicalStorageBufferAddresses
@@ -63,18 +69,21 @@ OpName %3 "main"
 OpName %7 "RootConstants"
 OpName %9 "registers"
 OpName %13 "SV_Position"
-OpName %34 "PhysicalPointerUint4CoherentArray"
-OpMemberName %34 0 "value"
+OpName %35 "ByteAddressMask"
+OpName %33 "index"
+OpName %34 "stride"
+OpName %45 "PhysicalPointerUint4CoherentArray"
+OpMemberName %45 0 "value"
 OpDecorate %7 Block
 OpMemberDecorate %7 0 Offset 0
 OpMemberDecorate %7 1 Offset 8
 OpMemberDecorate %7 2 Offset 16
 OpMemberDecorate %7 3 Offset 24
 OpDecorate %13 BuiltIn FragCoord
-OpDecorate %33 ArrayStride 16
-OpMemberDecorate %34 0 Offset 0
-OpDecorate %34 Block
-OpMemberDecorate %34 0 Coherent
+OpDecorate %44 ArrayStride 16
+OpMemberDecorate %45 0 Offset 0
+OpDecorate %45 Block
+OpMemberDecorate %45 0 Coherent
 %1 = OpTypeVoid
 %2 = OpTypeFunction %1
 %5 = OpTypeInt 32 0
@@ -93,16 +102,19 @@ OpMemberDecorate %34 0 Coherent
 %23 = OpConstant %5 1
 %28 = OpConstant %5 1000
 %31 = OpConstant %5 4
-%32 = OpTypeVector %5 4
-%33 = OpTypeRuntimeArray %32
-%34 = OpTypeStruct %33
-%35 = OpTypePointer PhysicalStorageBuffer %34
-%37 = OpTypePointer PhysicalStorageBuffer %32
-%47 = OpConstant %5 3
+%32 = OpTypeFunction %5 %5 %5
+%38 = OpConstant %5 4294967295
+%42 = OpConstant %5 16
+%43 = OpTypeVector %5 4
+%44 = OpTypeRuntimeArray %43
+%45 = OpTypeStruct %44
+%46 = OpTypePointer PhysicalStorageBuffer %45
+%48 = OpTypePointer PhysicalStorageBuffer %43
+%58 = OpConstant %5 3
 %3 = OpFunction %1 None %2
 %4 = OpLabel
-OpBranch %52
-%52 = OpLabel
+OpBranch %64
+%64 = OpLabel
 %15 = OpAccessChain %14 %9 %16
 %17 = OpLoad %6 %15
 %19 = OpAccessChain %18 %13 %20
@@ -114,23 +126,33 @@ OpBranch %52
 %27 = OpIMul %5 %26 %28
 %29 = OpIAdd %5 %27 %25
 %30 = OpShiftLeftLogical %5 %29 %31
-%36 = OpBitcast %35 %17
-%38 = OpInBoundsAccessChain %37 %36 %20 %29
+%41 = OpFunctionCall %5 %35 %29 %42
+%47 = OpBitcast %46 %17
+%49 = OpInBoundsAccessChain %48 %47 %20 %41
 OpBeginInvocationInterlockEXT
-%39 = OpLoad %32 %38 Aligned 16
-%40 = OpCompositeExtract %5 %39 0
-%41 = OpCompositeExtract %5 %39 1
-%42 = OpCompositeExtract %5 %39 2
-%43 = OpCompositeExtract %5 %39 3
-%44 = OpIAdd %5 %40 %23
-%45 = OpIAdd %5 %41 %16
-%46 = OpIAdd %5 %42 %47
-%48 = OpIAdd %5 %43 %31
-%49 = OpBitcast %35 %17
-%50 = OpInBoundsAccessChain %37 %49 %20 %29
-%51 = OpCompositeConstruct %32 %44 %45 %46 %48
-OpStore %50 %51 Aligned 16
+%50 = OpLoad %43 %49 Aligned 16
+%51 = OpCompositeExtract %5 %50 0
+%52 = OpCompositeExtract %5 %50 1
+%53 = OpCompositeExtract %5 %50 2
+%54 = OpCompositeExtract %5 %50 3
+%55 = OpIAdd %5 %51 %23
+%56 = OpIAdd %5 %52 %16
+%57 = OpIAdd %5 %53 %58
+%59 = OpIAdd %5 %54 %31
+%60 = OpFunctionCall %5 %35 %29 %42
+%61 = OpBitcast %46 %17
+%62 = OpInBoundsAccessChain %48 %61 %20 %60
+%63 = OpCompositeConstruct %43 %55 %56 %57 %59
+OpStore %62 %63 Aligned 16
 OpEndInvocationInterlockEXT
 OpReturn
+OpFunctionEnd
+%35 = OpFunction %5 None %32
+%33 = OpFunctionParameter %5
+%34 = OpFunctionParameter %5
+%36 = OpLabel
+%37 = OpUDiv %5 %38 %34
+%39 = OpBitwiseAnd %5 %33 %37
+OpReturnValue %39
 OpFunctionEnd
 #endif

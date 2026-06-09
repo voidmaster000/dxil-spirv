@@ -759,6 +759,8 @@ struct Converter::Impl
 		bool nv_raw_access_chains = false;
 		bool wmma_fp8 = false;
 		bool nv_cooperative_matrix2_conversions = false;
+		bool ssbo_wraps_32bit_before_robustness = false;
+		bool raw_access_chain_wraps_32bit_before_robustness = false;
 		struct
 		{
 			bool enabled = false;

@@ -20,6 +20,11 @@ layout(set = 0, binding = 0, std430) writeonly buffer SSBO
 
 shared uint64_t _14[4];
 
+uint ByteAddressMask(uint index, uint stride)
+{
+    return index & (4294967295u / stride);
+}
+
 void main()
 {
     bool _23 = gl_GlobalInvocationID.x < 4u;
@@ -46,7 +51,7 @@ void main()
     barrier();
     if (_23)
     {
-        _9._m0[gl_GlobalInvocationID.x] = _14[gl_GlobalInvocationID.x];
+        _9._m0[ByteAddressMask(gl_GlobalInvocationID.x, 8u)] = _14[gl_GlobalInvocationID.x];
     }
 }
 
@@ -56,7 +61,7 @@ void main()
 ; SPIR-V
 ; Version: 1.3
 ; Generator: Unknown(30017); 21022
-; Bound: 64
+; Bound: 75
 ; Schema: 0
 OpCapability Shader
 OpCapability Int64
@@ -67,6 +72,9 @@ OpExecutionMode %3 LocalSize 128 1 1
 OpName %3 "main"
 OpName %7 "SSBO"
 OpName %45 "CmpXchgResult"
+OpName %59 "ByteAddressMask"
+OpName %57 "index"
+OpName %58 "stride"
 OpDecorate %6 ArrayStride 8
 OpMemberDecorate %7 0 Offset 0
 OpDecorate %7 Block
@@ -100,21 +108,24 @@ OpDecorate %17 BuiltIn GlobalInvocationId
 %43 = OpConstant %5 10
 %45 = OpTypeStruct %5 %22
 %48 = OpConstant %5 20
-%56 = OpTypePointer StorageBuffer %5
+%56 = OpTypeFunction %10 %10 %10
+%62 = OpConstant %10 4294967295
+%66 = OpConstant %10 8
+%67 = OpTypePointer StorageBuffer %5
 %3 = OpFunction %1 None %2
 %4 = OpLabel
-OpBranch %58
-%58 = OpLabel
+OpBranch %69
+%69 = OpLabel
 %19 = OpAccessChain %18 %17 %20
 %21 = OpLoad %10 %19
 %23 = OpULessThan %22 %21 %11
-OpSelectionMerge %60 None
-OpBranchConditional %23 %59 %60
-%59 = OpLabel
+OpSelectionMerge %71 None
+OpBranchConditional %23 %70 %71
+%70 = OpLabel
 %25 = OpAccessChain %24 %14 %21
 OpStore %25 %26
-OpBranch %60
-%60 = OpLabel
+OpBranch %71
+%71 = OpLabel
 OpControlBarrier %27 %27 %28
 %29 = OpBitwiseAnd %10 %21 %30
 %31 = OpUConvert %5 %21
@@ -137,16 +148,25 @@ OpControlBarrier %27 %27 %28
 %51 = OpAtomicIAdd %5 %32 %27 %20 %31
 %52 = OpAtomicIAdd %5 %32 %27 %20 %31
 OpControlBarrier %27 %27 %28
-OpSelectionMerge %62 None
-OpBranchConditional %23 %61 %62
-%61 = OpLabel
+OpSelectionMerge %73 None
+OpBranchConditional %23 %72 %73
+%72 = OpLabel
 %53 = OpAccessChain %24 %14 %21
 %54 = OpLoad %5 %53
 %55 = OpShiftLeftLogical %10 %21 %30
-%57 = OpAccessChain %56 %9 %20 %21
-OpStore %57 %54
-OpBranch %62
-%62 = OpLabel
+%65 = OpFunctionCall %10 %59 %21 %66
+%68 = OpAccessChain %67 %9 %20 %65
+OpStore %68 %54
+OpBranch %73
+%73 = OpLabel
 OpReturn
+OpFunctionEnd
+%59 = OpFunction %10 None %56
+%57 = OpFunctionParameter %10
+%58 = OpFunctionParameter %10
+%60 = OpLabel
+%61 = OpUDiv %10 %62 %58
+%63 = OpBitwiseAnd %10 %57 %61
+OpReturnValue %63
 OpFunctionEnd
 #endif
