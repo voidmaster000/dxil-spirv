@@ -1,0 +1,38 @@
+name: Build Windows Binaries
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    permissions:
+      contents: read
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          submodules: recursive
+
+      - name: Configure
+        run: cmake -S . -B build
+
+      - name: Build
+        run: cmake --build build --config Release
+
+      - name: Install
+        run: cmake --install build --config Release --prefix install
+
+      - name: Upload binaries
+        uses: actions/upload-artifact@v4
+        with:
+          name: dxil-spirv-windows-binaries
+          path: |
+            install/bin/*
+            install/lib/*
+          if-no-files-found: error
